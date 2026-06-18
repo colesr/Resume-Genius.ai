@@ -5,8 +5,8 @@ import streamlit as st
 import utils
 # ---------------- CONFIG ----------------
 st.set_page_config(
-    page_title="AI ATS Resume Analyzer Pro",
-    page_icon="🤖",
+    page_title="Resume Match Assistant",
+    page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -274,53 +274,46 @@ def make_optimizer_card(original, optimized, rationale):
         f'<p style="color: #94a3b8; font-size: 13.5px; margin-top: 6px; line-height: 1.5; font-family: Inter, sans-serif;">{original}</p>'
         '</div>'
         '<div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 12px;">'
-        '<span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #34d399; background: rgba(16, 185, 129, 0.08); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.05em;">AI-Optimized Version</span>'
+        '<span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #34d399; background: rgba(16, 185, 129, 0.08); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.05em;">Suggested Version</span>'
         f'<p style="color: #f8fafc; font-size: 13.5px; font-weight: 500; margin-top: 6px; line-height: 1.5; font-family: Inter, sans-serif; border-left: 3px solid #6366f1; padding-left: 10px;">{optimized}</p>'
         '</div>'
         '<div style="background: rgba(255, 255, 255, 0.02); padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #64748b; font-family: Inter, sans-serif;">'
-        f'<span style="font-weight: 600; color: #94a3b8;">ATS Reason:</span> {rationale}'
+        f'<span style="font-weight: 600; color: #94a3b8;">Why this helps:</span> {rationale}'
         '</div>'
         '</div>'
         '</div>'
     )
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
-    st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h2 style='color: white; margin-bottom: 0;'>⚙️ Control Center</h2><span style='color: #64748b; font-size: 12px;'>ATS Optimizer Pro</span></div>", unsafe_allow_html=True)
-    
-    # API Key Configuration
-    st.markdown("### 🔑 API Authentication")
+    st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h2 style='color: white; margin-bottom: 0;'>🎯 Personal Setup</h2><span style='color: #64748b; font-size: 12px;'>Tailor the review to your application</span></div>", unsafe_allow_html=True)
+
     env_key = os.getenv("GROQ_API_KEY")
-    
+    api_key = env_key or None
+
     if env_key:
-        st.success("API Key loaded from Environment")
-        api_key = env_key
+        st.success("Ready to analyze")
     else:
-        api_key = st.text_input("Enter Groq API Key", type="password", help="You can get a free API key from console.groq.com")
-        if not api_key:
-            st.warning("Please enter API Key to proceed")
-            
+        st.warning("Analysis service is not connected yet. Please ask the app owner to finish setup.")
+
     st.markdown("---")
-    
-    # Model Selection
-    st.markdown("### 🧠 LLM Tuning")
-    target_role = st.text_input("Target Job Title (Optional)", placeholder="e.g. Senior Frontend Engineer", help="Providing this optimizes tailoring filters.")
-    model_choice = st.selectbox("Inference Model", ["llama-3.3-70b-versatile", "llama3-70b-8192"], index=0)
-    temperature = st.slider("Temperature", 0.0, 1.0, 0.2, 0.05, help="Lower values yield more structured and consistent audits.")
-    
-    st.markdown("---")
-    st.markdown("""
-    <div style="color: #64748b; font-size: 12px; line-height: 1.5;">
-        <strong>How it works:</strong><br>
-        1. Upload your Resume (PDF/Word/Text).<br>
-        2. Paste the target Job Description.<br>
-        3. The AI reviews ATS compatibility, calculates scores, identifies missing keywords, and optimizes your wording.
-    </div>
-    """, unsafe_allow_html=True)
+
+    st.markdown("### Your Application")
+    target_role = st.text_input("Target role", placeholder="e.g. Frontend Developer")
+    experience_level = st.selectbox(
+        "Experience level",
+        ["Not specified", "Student / Fresher", "Entry level", "Mid level", "Senior level"],
+        index=0
+    )
+    focus_area = st.selectbox(
+        "Main focus",
+        ["Overall match", "Missing keywords", "Resume wording", "Interview preparation"],
+        index=0
+    )
 # ---------------- HEADER ----------------
 st.markdown("""
-<div class='main-title'>🤖 AI ATS Resume Analyzer Pro</div>
+<div class='main-title'>📄 Resume Match Assistant</div>
 <div class='subtitle'>
-Audit Resume Compliance • Map Critical Keywords • Tailor Application Material
+Match your resume to a job post and get clear next steps
 </div>
 """, unsafe_allow_html=True)
 # Initialize Session State for analysis results
@@ -368,28 +361,26 @@ with trigger_cols[1]:
 st.markdown("</div>", unsafe_allow_html=True)
 if analyze_btn:
     if not api_key:
-        st.error("Missing Authentication: Please provide a valid Groq API Key.")
+        st.error("The analyzer is not connected yet. Please ask the app owner to finish setup.")
     elif not st.session_state.resume_text.strip():
         st.error("Missing Input: Please upload or paste a Resume.")
     elif not job_desc.strip():
         st.error("Missing Input: Please paste the Job Description.")
     else:
-        with st.spinner("Analyzing resume against criteria using Llama-3.3-70B..."):
+        with st.spinner("Reviewing your resume against the job post..."):
             try:
-                # Compile job description with additional role context if available
-                full_jd = job_desc
-                if target_role.strip():
-                    full_jd = f"Target Role: {target_role}\n\nJob Description:\n{job_desc}"
-                    
                 analysis = utils.analyze_resume_ats(
                     resume_text=st.session_state.resume_text,
-                    job_desc_text=full_jd,
-                    api_key=api_key
+                    job_desc_text=job_desc,
+                    api_key=api_key,
+                    target_role=target_role,
+                    experience_level=experience_level,
+                    focus_area=focus_area
                 )
                 st.session_state.analysis_results = analysis
                 st.success("Analysis complete!")
             except Exception as e:
-                st.error(f"Audit Failed: {str(e)}")
+                st.error(f"Analysis failed: {str(e)}")
 # ---------------- DASHBOARD & RESULTS DISPLAY ----------------
 if st.session_state.analysis_results:
     res = st.session_state.analysis_results
@@ -397,7 +388,7 @@ if st.session_state.analysis_results:
     # 1. Main Dashboard Indicators
     st.markdown("""
     <div class="glass-card">
-        <div class="glass-card-header">🚀 Compliance & Match Diagnostics</div>
+        <div class="glass-card-header">🚀 Resume Match Snapshot</div>
         <div style="display: flex; flex-wrap: wrap; justify-content: space-around; width: 100%; margin: 10px 0;">
     """, unsafe_allow_html=True)
     
@@ -408,9 +399,9 @@ if st.session_state.analysis_results:
     with gauge_cols[1]:
         st.markdown(draw_gauge(res.get("match_percentage", 0), "JOB MATCH", "#10b981", "#059669"), unsafe_allow_html=True)
     with gauge_cols[2]:
-        st.markdown(draw_gauge(res.get("formatting_score", 0), "FORMAT COMPLIANCE", "#f59e0b", "#d97706"), unsafe_allow_html=True)
+        st.markdown(draw_gauge(res.get("formatting_score", 0), "RESUME FORMAT", "#f59e0b", "#d97706"), unsafe_allow_html=True)
     with gauge_cols[3]:
-        st.markdown(draw_gauge(res.get("keyword_score", 0), "KEYWORD DENSITY", "#ec4899", "#db2777"), unsafe_allow_html=True)
+        st.markdown(draw_gauge(res.get("keyword_score", 0), "KEYWORD MATCH", "#ec4899", "#db2777"), unsafe_allow_html=True)
         
     st.markdown("""
         </div>
@@ -439,7 +430,7 @@ if st.session_state.analysis_results:
             """).strip(), unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### ⚙️ ATS Parsing Checks")
+            st.markdown("### Resume Scan Checks")
             checks_html = ""
             for check in res.get("ats_compatibility_checks", []):
                 chk_name = check.get("check", "")
@@ -479,8 +470,8 @@ if st.session_state.analysis_results:
             st.markdown(make_bullet_list(res.get("critical_issues", []), is_positive=False), unsafe_allow_html=True)
     # --- TAB 2: KEYWORD & SKILLS AUDIT ---
     with tab_keywords:
-        st.markdown("### 🏷️ Job Description Keyword Matrix")
-        st.markdown("Below is a breakdown of critical skills and terms found in the job description, mapped against your resume's vocabulary.")
+        st.markdown("### 🏷️ Keywords From the Job Post")
+        st.markdown("Important skills and terms from the job post, compared with your resume.")
         
         keywords_list = res.get("keyword_analysis", [])
         present_kws = [k for k in keywords_list if k.get("status") == "Present"]
@@ -525,7 +516,7 @@ if st.session_state.analysis_results:
             st.success("No structural skills gaps identified.")
     # --- TAB 3: BULLET OPTIMIZER ---
     with tab_optimization:
-        st.markdown("### 🛠️ ATS Keyword Injection & Phrasing Optimization")
+        st.markdown("### 🛠️ Bullet Rewrite Suggestions")
         st.markdown("Replace weak phrasing with high-impact, quantified accomplishments tailored to the job description requirements.")
         
         snippets = res.get("optimized_resume_snippets", [])
@@ -540,7 +531,7 @@ if st.session_state.analysis_results:
             
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 💡 Formatting & Content Improvement Guidelines")
-        st.markdown("Apply these general improvements to increase layout scanners reading accuracy:")
+        st.markdown("Apply these general improvements to make your resume easier to read.")
         for advice in res.get("improvement_suggestions", []):
             st.markdown(textwrap.dedent(f"""
             <div style="display: flex; gap: 10px; margin-bottom: 10px; font-size: 13.5px; color: #cbd5e1;">
