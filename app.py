@@ -497,7 +497,7 @@ def draw_gauge(score, label, delay=0):
 
 def make_bullet_list(items, is_positive=True):
     """Renders minimalist bullet list items."""
-    icon = "✓" if is_positive else "⚠"
+    icon = "✔️" if is_positive else "⚠"
     color = C['success'] if is_positive else C['warning']
     
     html = ""
