@@ -497,7 +497,7 @@ def draw_gauge(score, label, delay=0):
 
 def make_bullet_list(items, is_positive=True):
     """Renders minimalist bullet list items."""
-    icon = "✔️" if is_positive else "⚠"
+    icon = "+" if is_positive else "-"
     color = C['success'] if is_positive else C['warning']
     
     html = ""
@@ -519,7 +519,7 @@ def make_keyword_badges(keywords):
         status = kw_data.get("status", "Present")
         
         badge_class = "present" if status == "Present" else "missing"
-        icon = "✓" if status == "Present" else "✗"
+        icon = "+" if status == "Present" else "-"
         animation_delay = (idx % 8) * 0.06
         
         html += f"""
@@ -567,9 +567,9 @@ with st.sidebar:
     api_key = env_key or None
 
     if env_key:
-        st.success("✓ Analyzer connected", icon="✓")
+        st.success("+ Analyzer connected", icon="+")
     else:
-        st.warning("⚠ Setup incomplete", icon="⚠")
+        st.warning("- Setup incomplete", icon="-")
 
     st.markdown("---")
 
