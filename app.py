@@ -567,9 +567,9 @@ with st.sidebar:
     api_key = env_key or None
 
     if env_key:
-        st.success("+", icon="+")
+        st.success("Connected", icon="➕")
     else:
-        st.warning("-", icon="-")
+        st.warning("Not Succesful", icon="🛑")
 
     st.markdown("---")
 
