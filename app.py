@@ -642,7 +642,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
     
-    job_desc = st.text_area("Paste job description", height="208px", label_visibility="collapsed", placeholder="Paste the job description you're applying for...")
+    job_desc = st.text_area("Paste job description", height=208, label_visibility="collapsed", placeholder="Paste the job description you're applying for...")
 
 # ---------------- WORKFLOW GUIDE - ANALYZE BUTTON ----------------
 st.markdown("<div style='margin: 40px 0 30px 0;'>", unsafe_allow_html=True)
